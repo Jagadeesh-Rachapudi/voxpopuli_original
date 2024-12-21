@@ -51,8 +51,8 @@ def extract_and_organize(download_dir, target_dir):
     print("All files processed. Original .tar files are retained.")
 
 # Define paths
-download_dir = "./downloads"  # Directory containing .tar files
-target_dir = "./raw_audios"    # Directory where extracted files will be organized
+download_dir = "../downloads"  # Directory containing .tar files
+target_dir = "../raw_audios"    # Directory where extracted files will be organized
 
 # Call the function
 extract_and_organize(download_dir, target_dir)
