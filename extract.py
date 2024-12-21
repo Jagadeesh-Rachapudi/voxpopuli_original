@@ -36,7 +36,7 @@ def extract_and_organize(download_dir, target_dir):
 
         # Define extraction folder: target_dir/lang/year
         extract_folder = target_path / lang / year
-        extract_folder.mkdir(parents=True, exist_ok=True)
+        extract_folder.mkdir(parents=True, exist_ok=False)
 
         print(f"Extracting {tar_file.name} to {extract_folder}...")
 
