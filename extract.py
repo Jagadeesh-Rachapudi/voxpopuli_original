@@ -41,12 +41,13 @@ def extract_and_organize(download_dir, target_dir):
         print(f"Extracting {tar_file.name} to {extract_folder}...")
 
         try:
-            # Extract the tar file and flatten the structure
+            # Extract the tar file and flatten structure
             with tarfile.open(tar_file, "r") as tar:
                 for member in tar.getmembers():
-                    # Ensure files are extracted directly into the target directory
+                    # Flatten the structure: Remove nested folders
                     member_path = Path(member.name)
-                    member.name = member_path.name  # Keep only the file name
+                    # Set member's name to only the file name (flattening)
+                    member.name = member_path.name
                     tar.extract(member, path=extract_folder)
             print(f"Extraction complete: {tar_file.name}")
         except tarfile.TarError as e:
