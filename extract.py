@@ -41,9 +41,13 @@ def extract_and_organize(download_dir, target_dir):
         print(f"Extracting {tar_file.name} to {extract_folder}...")
 
         try:
-            # Extract the tar file
+            # Extract the tar file and flatten the structure
             with tarfile.open(tar_file, "r") as tar:
-                tar.extractall(path=extract_folder)
+                for member in tar.getmembers():
+                    # Ensure files are extracted directly into the target directory
+                    member_path = Path(member.name)
+                    member.name = member_path.name  # Keep only the file name
+                    tar.extract(member, path=extract_folder)
             print(f"Extraction complete: {tar_file.name}")
         except tarfile.TarError as e:
             print(f"Failed to extract {tar_file.name}: {e}")
@@ -52,7 +56,7 @@ def extract_and_organize(download_dir, target_dir):
 
 # Define paths
 download_dir = "../downloads"  # Directory containing .tar files
-target_dir = "../raw_audios"    # Directory where extracted files will be organized
+target_dir = "../raw_audios"   # Directory where extracted files will be organized
 
 # Call the function
 extract_and_organize(download_dir, target_dir)
