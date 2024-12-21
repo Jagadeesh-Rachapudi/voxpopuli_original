@@ -89,7 +89,7 @@ def get_metadata(out_root, subset):
 
 
 def get(args):
-    audio_root = Path(args.root) / "raw_audios"
+    audio_root = Path(args.root) 
     out_root = Path(args.root) / "unlabelled_data"
     out_root.mkdir(exist_ok=True, parents=True)
     items = defaultdict(list)
