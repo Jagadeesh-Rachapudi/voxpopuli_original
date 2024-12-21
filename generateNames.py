@@ -1,49 +1,64 @@
-import os
-import time
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+import argparse
 from pathlib import Path
+from voxpopuli import LANGUAGES, LANGUAGES_V2, YEARS, DOWNLOAD_BASE_URL
 
-def monitor_downloads(download_directory, output_file, expected_file_count):
-    """
-    Monitor a directory for new files and save their names to a text file.
 
-    Args:
-        download_directory (str): Path to the directory where files are downloaded.
-        output_file (str): Path to the output text file to save file names.
-        expected_file_count (int): The total number of expected files.
-    """
-    # Ensure the download directory exists
-    download_path = Path(download_directory)
-    if not download_path.exists() or not download_path.is_dir():
-        print(f"Error: The directory '{download_directory}' does not exist.")
-        return
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--root", "-r", type=str, required=True, help="data root path"
+    )
+    parser.add_argument(
+        "--subset", "-s", type=str, required=True,
+        choices=["400k", "100k", "10k", "asr"] + LANGUAGES + LANGUAGES_V2,
+        help="data subset to list files for"
+    )
+    return parser.parse_args()
 
-    # Set to keep track of observed file names
-    observed_files = set()
 
-    print(f"Monitoring '{download_directory}' for downloads...")
-    while len(observed_files) < expected_file_count:
-        # List all files currently in the directory
-        current_files = set(f.name for f in download_path.glob("*") if f.is_file())
+def list_files(args):
+    if args.subset in LANGUAGES_V2:
+        languages = [args.subset.split("_")[0]]
+        years = YEARS + [f"{y}_2" for y in YEARS]
+    elif args.subset in LANGUAGES:
+        languages = [args.subset]
+        years = YEARS
+    else:
+        languages = {
+            "400k": LANGUAGES,
+            "100k": LANGUAGES,
+            "10k": LANGUAGES,
+            "asr": ["original"]
+        }.get(args.subset, None)
+        years = {
+            "400k": YEARS + [f"{y}_2" for y in YEARS],
+            "100k": YEARS,
+            "10k": [2019, 2020],
+            "asr": YEARS
+        }.get(args.subset, None)
 
-        # Update observed files
-        new_files = current_files - observed_files
-        if new_files:
-            print(f"New files detected: {', '.join(new_files)}")
-            observed_files.update(new_files)
+    url_list = []
+    for l in languages:
+        for y in years:
+            url_list.append(f"{DOWNLOAD_BASE_URL}/audios/{l}_{y}.tar")
 
-            # Save updated file list to the output file
-            with open(output_file, "w") as file:
-                file.write("\n".join(sorted(observed_files)))
+    # Save the file names to 'names.txt'
+    file_list = [Path(url).name for url in url_list]
+    with open("names.txt", "w") as f:
+        f.write("\n".join(file_list))
 
-        # Wait for a short period before checking again
-        time.sleep(5)
+    print(f"List of files saved to 'names.txt'.")
 
-    print(f"All {expected_file_count} files have been saved to '{output_file}'.")
 
-# Define the download directory, output file, and expected file count
-download_directory = "../raw_audios"  # Replace with your actual download directory
-output_file = "names.txt"
-expected_file_count = 46  # Set the number of files expected
+def main():
+    args = get_args()
+    list_files(args)
 
-# Call the function
-monitor_downloads(download_directory, output_file, expected_file_count)
+
+if __name__ == '__main__':
+    main()
