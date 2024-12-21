@@ -80,7 +80,7 @@ def download(args):
     print(f"{len(url_list)} files to download...")
     for url in tqdm(url_list):
         tar_path = download_url(url, out_root, Path(url).name)
-        extract_archive(tar_path.as_posix())
+        # extract_archive(tar_path.as_posix())
         # os.remove(tar_path)
 
 
