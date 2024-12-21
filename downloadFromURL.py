@@ -14,6 +14,15 @@ def download_files_with_details(url_file, output_dir):
         output_dir (str): Directory to save downloaded files.
     """
     # Ensure the output directory exists
+    with open(url_file, "r") as file:
+        urls = [line.strip() for line in file if line.strip()]
+    for idx, url in enumerate(urls, 1):
+        file_name = os.path.basename(url)
+        # Ensure only raw URLs are processed
+        if not url.startswith("http"):
+            print(f"Skipping invalid URL: {url}")
+            continue
+    
     os.makedirs(output_dir, exist_ok=True)
 
     # Read URLs from the file
