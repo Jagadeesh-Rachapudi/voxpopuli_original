@@ -2,95 +2,76 @@ import os
 import requests
 from pathlib import Path
 from tqdm import tqdm
-import time
 
 
-def download_files_with_details(url_file, output_dir):
+def download_files_with_popping(url_file, output_dir):
     """
-    Download files from a list of URLs with detailed progress logging.
+    Download files from a list of URLs and remove each URL from the file once downloaded.
 
     Args:
         url_file (str): Path to the file containing URLs (one URL per line).
         output_dir (str): Directory to save downloaded files.
     """
-    # Ensure the output directory exists
-    with open(url_file, "r") as file:
-        urls = [line.strip() for line in file if line.strip()]
-    for idx, url in enumerate(urls, 1):
-        file_name = os.path.basename(url)
-        # Ensure only raw URLs are processed
-        if not url.startswith("http"):
-            print(f"Skipping invalid URL: {url}")
-            continue
-    
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Read URLs from the file
     with open(url_file, "r") as file:
         urls = [line.strip() for line in file if line.strip()]
 
     total_files = len(urls)
-    downloaded_files = 0
-
     print(f"Total files to download: {total_files}")
 
     for idx, url in enumerate(urls, 1):
         file_name = os.path.basename(url)
-        output_path = Path(output_dir) / file_name
+        output_path = output_dir / file_name
 
         # Skip if file already exists
         if output_path.exists():
             print(f"[{idx}/{total_files}] File already exists, skipping: {file_name}")
-            downloaded_files += 1
             continue
 
         print(f"[{idx}/{total_files}] Downloading: {url}")
 
-        start_time = time.time()
         try:
-            # Start downloading
+            # Download the file
             response = requests.get(url, stream=True)
             response.raise_for_status()  # Raise an error for bad HTTP responses
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-
             with open(output_path, "wb") as file:
-                with tqdm(
-                    total=total_size,
-                    unit='B',
-                    unit_scale=True,
-                    desc=f"Downloading {file_name}",
-                    ncols=80
-                ) as pbar:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        if chunk:
-                            file.write(chunk)
-                            downloaded_size += len(chunk)
-                            pbar.update(len(chunk))
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        file.write(chunk)
 
-            elapsed_time = time.time() - start_time
-            speed = downloaded_size / elapsed_time / 1024  # Speed in KB/s
-            print(
-                f"[{idx}/{total_files}] Download complete: {file_name} "
-                f"(Size: {total_size / (1024 * 1024):.2f} MB, Time: {elapsed_time:.2f}s, Speed: {speed:.2f} KB/s)"
-            )
-            downloaded_files += 1
+            print(f"[{idx}/{total_files}] Download complete: {file_name}")
+
+            # Remove the URL from the file
+            remove_downloaded_url(url_file, url)
 
         except requests.RequestException as e:
             print(f"[{idx}/{total_files}] Failed to download: {url} ({e})")
 
-    remaining_files = total_files - downloaded_files
-    print(f"\nSummary:")
-    print(f"Total files: {total_files}")
-    print(f"Downloaded files: {downloaded_files}")
-    print(f"Remaining files: {remaining_files}")
-    if remaining_files > 0:
-        print(f"Consider rerunning the script to retry failed downloads.")
+
+def remove_downloaded_url(url_file, url_to_remove):
+    print(url_to_remove"is about to remove")
+    """
+    Remove a specific URL from the URL file.
+
+    Args:
+        url_file (str): Path to the URL file.
+        url_to_remove (str): The URL to remove from the file.
+    """
+    with open(url_file, "r") as file:
+        urls = file.readlines()
+
+    with open(url_file, "w") as file:
+        for url in urls:
+            if url.strip() != url_to_remove:
+                file.write(url)
+     print(url_to_remove"is removed")           
 
 
-# Define the path to the URL file and output directory
-url_file = "10k_urls.txt"  # Replace with your URL file
+# Specify the path to the URL file and output directory
+url_file = "10k_urls.txt"  # Replace with the path to your URL file
 output_dir = "../downloads"  # Replace with your target folder
 
 # Call the function
-download_files_with_details(url_file, output_dir)
+download_files_with_popping(url_file, output_dir)
