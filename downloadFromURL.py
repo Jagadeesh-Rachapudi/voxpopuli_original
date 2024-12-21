@@ -66,7 +66,7 @@ def remove_downloaded_url(url_file, url_to_remove):
         for url in urls:
             if url.strip() != url_to_remove:
                 file.write(url)
-     print(url_to_remove,"is removed")           
+    print(url_to_remove,"is removed")           
 
 
 # Specify the path to the URL file and output directory
