@@ -25,7 +25,7 @@ def get_args():
     return parser.parse_args()
 
 
-def download_url(url, dest_folder, file_name):
+def durl(url, dest_folder, file_name):
     print(f"Starting download: {url}")
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,7 @@ def download(args):
     out_root.mkdir(exist_ok=True, parents=True)
     print(f"{len(url_list)} files to download...")
     for url in tqdm(url_list):
-        tar_path = download_url(url, out_root, Path(url).name)
+        tar_path = durl(url, out_root, Path(url).name)
         # extract_archive(tar_path.as_posix())
         # os.remove(tar_path)
 
