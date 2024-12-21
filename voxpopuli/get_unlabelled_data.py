@@ -9,13 +9,36 @@ import csv
 from pathlib import Path
 from collections import defaultdict
 from typing import Tuple, List
+import requests
 
 from tqdm import tqdm
-from torchaudio.datasets.utils import download_url
 import torchaudio
 
 from voxpopuli import LANGUAGES, LANGUAGES_V2, DOWNLOAD_BASE_URL
 from voxpopuli.utils import multiprocess_run
+
+
+def download_url(url, dest_folder, file_name):
+    """
+    Custom implementation to download a file from a URL.
+    """
+    dest_folder = Path(dest_folder)
+    dest_folder.mkdir(parents=True, exist_ok=True)
+    file_path = dest_folder / file_name
+
+    if file_path.exists():
+        print(f"File already exists, skipping: {file_name}")
+        return file_path
+
+    print(f"Downloading {url} to {file_path}...")
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(file_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
+    print(f"Download complete: {file_name}")
+    return file_path
 
 
 def _segment(item: Tuple[str, List[Tuple[str, float, float]], str]):
@@ -26,8 +49,8 @@ def _segment(item: Tuple[str, List[Tuple[str, float, float]], str]):
     waveform, sr = torchaudio.load(in_path)
     for i, s, e in segments:
         start, end = int(s * sr), min(waveform.size(1), int(e * sr))
-        out_path = Path(out_root) / lang / year / f'{event_id}_{i}.ogg'
-        torchaudio.save(out_path.as_posix(), waveform[:, start: end], sr)
+        out_path = Path(out_root) / lang / year / f"{event_id}_{i}.ogg"
+        torchaudio.save(out_path.as_posix(), waveform[:, start:end], sr)
 
 
 def get_metadata(out_root, subset):
@@ -48,7 +71,7 @@ def get_metadata(out_root, subset):
     tsv_path = out_root / Path(url).name
     if not tsv_path.exists():
         download_url(url, out_root.as_posix(), Path(url).name)
-    if subset == '10k_sd':
+    if subset == "10k_sd":
         with gzip.open(tsv_path, mode="rt") as f:
             rows = [
                 (r["session_id"], r["id_"], r["start_time"], r["end_time"])
@@ -91,7 +114,7 @@ def get_args():
     parser.add_argument(
         "--subset", "-s", type=str, required=True,
         choices=["400k", "100k", "10k", "10k_sd"] + LANGUAGES + LANGUAGES_V2,
-        help="data subset to download"
+        help="data subset to download",
     )
     return parser.parse_args()
 
