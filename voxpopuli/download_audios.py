@@ -6,9 +6,8 @@
 import argparse
 import os
 from pathlib import Path
-
 from tqdm import tqdm
-from torchaudio.datasets.utils import download_url, extract_archive
+import requests
 
 from voxpopuli import LANGUAGES, LANGUAGES_V2, YEARS, DOWNLOAD_BASE_URL
 
@@ -24,6 +23,30 @@ def get_args():
         help="data subset to download"
     )
     return parser.parse_args()
+
+
+def download_url(url, dest_folder, file_name):
+    """Custom function to download a file from a URL."""
+    dest_folder = Path(dest_folder)
+    dest_folder.mkdir(parents=True, exist_ok=True)
+    file_path = dest_folder / file_name
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(file_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+    else:
+        raise Exception(f"Failed to download {url}. HTTP status code: {response.status_code}")
+    return file_path
+
+
+def extract_archive(tar_path):
+    """Extract a tar archive."""
+    # from tarfile import open as tar_open
+    # tar_path = Path(tar_path)
+    # with tar_open(tar_path, 'r') as tar:
+    #     tar.extractall(path=tar_path.parent)
 
 
 def download(args):
@@ -56,10 +79,9 @@ def download(args):
     out_root.mkdir(exist_ok=True, parents=True)
     print(f"{len(url_list)} files to download...")
     for url in tqdm(url_list):
-        tar_path = out_root / Path(url).name
-        download_url(url, out_root.as_posix(), Path(url).name)
+        tar_path = download_url(url, out_root, Path(url).name)
         extract_archive(tar_path.as_posix())
-        os.remove(tar_path)
+        # os.remove(tar_path)
 
 
 def main():
