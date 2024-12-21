@@ -26,7 +26,7 @@ def get_args():
 
 
 def download_url(url, dest_folder, file_name):
-    """Custom function to download a file from a URL."""
+    print(f"Starting download: {url}")
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
     file_path = dest_folder / file_name
@@ -36,8 +36,10 @@ def download_url(url, dest_folder, file_name):
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     file.write(chunk)
+        print(f"Completed download: {file_name}")
     else:
-        raise Exception(f"Failed to download {url}. HTTP status code: {response.status_code}")
+        print(f"Failed to download {url} with status code {response.status_code}")
+        raise Exception(f"HTTP status code: {response.status_code}")
     return file_path
 
 
